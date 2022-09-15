@@ -4,8 +4,26 @@
     {
       "source": {
         "git": {
+          "remote": "https://github.com/jsonnet-libs/k8s-libsonnet.git",
+          "subdir": ""
+        }
+      },
+      "version": "main"
+    },
+    {
+      "source": {
+        "git": {
+          "remote": "https://github.com/jsonnet-libs/prometheus-operator-libsonnet.git",
+          "subdir": ""
+        }
+      },
+      "version": "main"
+    },
+    {
+      "source": {
+        "git": {
           "remote": "https://github.com/prometheus-operator/kube-prometheus.git",
-          "subdir": "/jsonnet/kube-prometheus"
+          "subdir": "jsonnet/kube-prometheus"
         }
       },
       "version": "v0.11.0"
