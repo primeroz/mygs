@@ -3,7 +3,7 @@ local kp = import 'prometheus-operator-libsonnet/0.57/main.libsonnet';
 local sm = kp.monitoring.v1.serviceMonitor;
 
 {
-  serviceMonitor+:
+  KsmServiceMonitor:
     sm.new('kube-state-metrics') +
     sm.metadata.withNamespace('kube-system') +
     sm.spec.selector.withMatchLabels({ app: 'kube-state-metrics' }) +
@@ -22,6 +22,34 @@ local sm = kp.monitoring.v1.serviceMonitor;
           //  action: 'labeldrop',
           //},
         ],
+      },
+    ]),
+
+  NodeExporterServiceMonitor:
+    sm.new('node-exporter') +
+    sm.metadata.withNamespace('kube-system') +
+    sm.spec.selector.withMatchLabels({ app: 'node-exporter' }) +
+    sm.spec.withEndpoints([
+      {
+        port: 'metrics',
+        interval: '30s',
+        scrapeTimeout: '30s',
+        //bearerTokenFile: '/var/run/secrets/kubernetes.io/serviceaccount/token',
+        relabelings: [
+          {
+            action: 'replace',
+            regex: '(.*)',
+            replacement: '$1',
+            sourceLabels: [
+              '__meta_kubernetes_pod_node_name',
+            ],
+            targetLabel: 'instance',
+          },
+        ],
+        //scheme: 'https',
+        tlsConfig: {
+          insecureSkipVerify: true,
+        },
       },
     ]),
 

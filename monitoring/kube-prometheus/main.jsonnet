@@ -28,13 +28,15 @@ local kp =
 { ['alertmanager-' + name]: kp.alertmanager[name] for name in std.objectFields(kp.alertmanager) } +
 { ['grafana-' + name]: kp.grafana[name] for name in std.objectFields(kp.grafana) } +
 { ['kubernetes-' + name]: kp.kubernetesControlPlane[name] for name in std.objectFields(kp.kubernetesControlPlane) }
-// { ['node-exporter-' + name]: kp.nodeExporter[name] for name in std.objectFields(kp.nodeExporter) } +
+{ ['node-exporter-' + name]: kp.nodeExporter[name] for name in std.objectFields(kp.nodeExporter) if kp.nodeExporter[name].kind == 'PrometheusRule' } +
 { ['prometheus-' + name]: kp.prometheus[name] for name in std.objectFields(kp.prometheus) } +
 { restrictedPodSecurityPolicy: kp.restrictedPodSecurityPolicy } +
-(import './ksm-monitoring.libsonnet')
+(import './extra-monitoring.libsonnet')
 //{ ['prometheus-adapter-' + name]: kp.prometheusAdapter[name] for name in std.objectFields(kp.prometheusAdapter) }
 
 // TODO
 // * add KSM and node-exporter servicemonitor
 // * add networkpolicy from master node to access grafana and prometheus through the kubectl-proxy
 // * add other scrapers - coredns, externaldns, kiam, xxxx
+// * prometheus retention
+// * controller manager and scheduler scraping is down
