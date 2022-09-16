@@ -12,6 +12,18 @@ local kp =
       common+: {
         namespace: 'monitoring',
       },
+      kubernetesControlPlane+: {
+        kubeProxy: true,
+      },
+      grafana+: {
+        dashboards+:: {
+          'kiam.json': (import './grafana/kiam.json'),
+        },
+      },
+    },
+    kubernetesControlPlane+: {
+      serviceMonitorKubeControllerManager:: null,
+      serviceMonitorKubeScheduler:: null,
     },
   };
 
@@ -31,7 +43,8 @@ local kp =
 { ['node-exporter-' + name]: kp.nodeExporter[name] for name in std.objectFields(kp.nodeExporter) if kp.nodeExporter[name].kind == 'PrometheusRule' } +
 { ['prometheus-' + name]: kp.prometheus[name] for name in std.objectFields(kp.prometheus) } +
 { restrictedPodSecurityPolicy: kp.restrictedPodSecurityPolicy } +
-(import './extra-monitoring.libsonnet')
+(import './extra-monitoring.libsonnet') +
+(import './kiam-monitoring.libsonnet')
 //{ ['prometheus-adapter-' + name]: kp.prometheusAdapter[name] for name in std.objectFields(kp.prometheusAdapter) }
 
 // TODO

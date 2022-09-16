@@ -1,6 +1,9 @@
+local k = import 'k8s-libsonnet/1.23/main.libsonnet';
 local kp = import 'prometheus-operator-libsonnet/0.57/main.libsonnet';
 
+
 local sm = kp.monitoring.v1.serviceMonitor;
+local pm = kp.monitoring.v1.podMonitor;
 
 {
   KsmServiceMonitor:
@@ -52,5 +55,88 @@ local sm = kp.monitoring.v1.serviceMonitor;
         },
       },
     ]),
+
+  ControllerManagerPodMonitor:
+    pm.new('kube-controller-manager') +
+    pm.metadata.withNamespace('monitoring') +
+    pm.spec.selector.withMatchLabels({ 'app.kubernetes.io/name': 'controller-manager' }) +
+    pm.spec.namespaceSelector.withMatchNames('kube-system') +
+    pm.spec.withPodMetricsEndpoints([
+      {
+        honorLabels: true,
+        interval: '30s',
+        scrapeTimeout: '30s',
+        bearerTokenSecret: {
+          name: 'prometheus-k8s-token-8qrzk',  // hardcoded :(
+          key: 'token',
+        },
+        scheme: 'https',
+        tlsConfig: {
+          insecureSkipVerify: true,
+        },
+        relabelings: [
+          {
+            action: 'replace',
+            regex: '(.*)',
+            replacement: '$1',
+            sourceLabels: [
+              '__meta_kubernetes_pod_node_name',
+            ],
+            targetLabel: 'instance',
+          },
+          {
+            action: 'replace',
+            regex: '(.*)',
+            replacement: '$1:10257',
+            sourceLabels: [
+              '__meta_kubernetes_pod_ip',
+            ],
+            targetLabel: '__address__',
+          },
+        ],
+      },
+    ]),
+
+  SchedulerPodMonitor:
+    pm.new('kube-scheduler') +
+    pm.metadata.withNamespace('monitoring') +
+    pm.spec.selector.withMatchLabels({ 'app.kubernetes.io/name': 'scheduler' }) +
+    pm.spec.namespaceSelector.withMatchNames('kube-system') +
+    pm.spec.withPodMetricsEndpoints([
+      {
+        honorLabels: true,
+        interval: '30s',
+        scrapeTimeout: '30s',
+        bearerTokenSecret: {
+          name: 'prometheus-k8s-token-8qrzk',  // hardcoded :(
+          key: 'token',
+        },
+        scheme: 'https',
+        tlsConfig: {
+          insecureSkipVerify: true,
+        },
+        relabelings: [
+          {
+            action: 'replace',
+            regex: '(.*)',
+            replacement: '$1',
+            sourceLabels: [
+              '__meta_kubernetes_pod_node_name',
+            ],
+            targetLabel: 'instance',
+          },
+          {
+            action: 'replace',
+            regex: '(.*)',
+            replacement: '$1:10259',
+            sourceLabels: [
+              '__meta_kubernetes_pod_ip',
+            ],
+            targetLabel: '__address__',
+          },
+        ],
+      },
+    ]),
+
 
 }
