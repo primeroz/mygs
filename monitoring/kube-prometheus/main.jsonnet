@@ -24,6 +24,7 @@ local kp =
       grafana+: {
         dashboards+:: {
           'kiam.json': (import './grafana/kiam.json'),
+          'coredns-dashboard.json': (import './grafana/coredns-dashboard.json'),
         },
       },
     },
