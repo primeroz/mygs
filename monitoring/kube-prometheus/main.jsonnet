@@ -16,8 +16,8 @@ local kp =
         kubeProxy: true,
         mixin+: {
           _config+: {
-            kubeControllerManagerSelector: 'job="controller-manager"',
-            kubeSchedulerSelector: 'job="scheduler"',
+            kubeControllerManagerSelector: 'job="monitoring/kube-controller-manager"',
+            kubeSchedulerSelector: 'job="monitoring/kube-scheduler"',
           },
         },
       },
@@ -30,12 +30,12 @@ local kp =
     kubernetesControlPlane+: {
       serviceMonitorKubeControllerManager:: null,
       serviceMonitorKubeScheduler:: null,
-      serviceMonitorCoreDns+: {
-        //spec+: {
-        //  selector+: {
-        //    matchLabels: { 'k8s-app': 'coredns' },
-        //  },
-        //},
+      serviceMonitorCoreDNS+: {
+        spec+: {
+          selector: {
+            matchLabels: { 'k8s-app': 'coredns' },
+          },
+        },
       },
     },
   };
@@ -61,8 +61,5 @@ local kp =
 //{ ['prometheus-adapter-' + name]: kp.prometheusAdapter[name] for name in std.objectFields(kp.prometheusAdapter) }
 
 // TODO
-// * add KSM and node-exporter servicemonitor
 // * add networkpolicy from master node to access grafana and prometheus through the kubectl-proxy
-// * add other scrapers - coredns, externaldns, kiam, xxxx
 // * prometheus retention
-// * controller manager and scheduler scraping is down
