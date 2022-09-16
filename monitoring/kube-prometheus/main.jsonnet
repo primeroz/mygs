@@ -14,6 +14,12 @@ local kp =
       },
       kubernetesControlPlane+: {
         kubeProxy: true,
+        mixin+: {
+          _config+: {
+            kubeControllerManagerSelector: 'job="controller-manager"',
+            kubeSchedulerSelector: 'job="scheduler"',
+          },
+        },
       },
       grafana+: {
         dashboards+:: {
@@ -24,6 +30,13 @@ local kp =
     kubernetesControlPlane+: {
       serviceMonitorKubeControllerManager:: null,
       serviceMonitorKubeScheduler:: null,
+      serviceMonitorCoreDns+: {
+        //spec+: {
+        //  selector+: {
+        //    matchLabels: { 'k8s-app': 'coredns' },
+        //  },
+        //},
+      },
     },
   };
 
