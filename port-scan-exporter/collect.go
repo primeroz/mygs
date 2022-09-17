@@ -16,6 +16,8 @@ func collectPods() {
 
 	start := time.Now()
 
+	log.Infof("Collecting Pods")
+
 	ctx := context.TODO()
 	config := ctrl.GetConfigOrDie()
 	clientset := kubernetes.NewForConfigOrDie(config)
@@ -25,7 +27,7 @@ func collectPods() {
 		panic(err.Error())
 	}
 
-	log.Infof("There are %d pods in the cluster", len(pods.Items))
+	log.Debugf("There are %d pods in the cluster", len(pods.Items))
 
 	// Clear the DB before evaluating currently running pods
 	store.Del("/pods")
@@ -33,24 +35,14 @@ func collectPods() {
 	// Filter Pods to exclude those running with host network
 	for _, p := range pods.Items {
 		if p.Spec.HostNetwork {
-			log.Infof("Excluding host network pod %s", p.GetName())
+			log.Debugf("Excluding host network pod %s", p.GetName())
 		} else {
-			log.Infof("Adding pod %s to list of pods to scan", p.GetName())
+			log.Debugf("Adding pod %s to list of pods to scan", p.GetName())
 			store.Set(fmt.Sprintf("/pods/%s/ip", p.GetName()), p.Status.PodIP)
 			store.Set(fmt.Sprintf("/pods/%s/name", p.GetName()), p.GetName())
 			store.Set(fmt.Sprintf("/pods/%s/namespace", p.GetName()), p.GetNamespace())
 		}
 	}
-
-	// TMP Check
-	//keys := store.List("/pods/")
-	//log.Infof("There are %d keys in the store", len(keys))
-	//for _, key := range keys {
-	//	log.Infof("Key: %s", key)
-	//}
-	//store.Del("/pods")
-	//testkeys := store.List("/")
-	//log.Infof("There are %d keys in the store", len(testkeys))
 
 	timeTrack(start, "Collecting Pods")
 

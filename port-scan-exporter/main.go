@@ -20,7 +20,6 @@ var store memkv.Store
 // ========================
 // TODO Need lock to prevent multiple runs if it takes longer then interval ?
 func collectAndScan() {
-	log.Infof("Collecting Pods")
 	collectPods()
 	scanPods()
 }
@@ -40,11 +39,17 @@ func main() {
 	// =====================
 	var bind string
 	var interval uint64
+	var debuglog bool
 
 	flag.StringVar(&bind, "bind", "0.0.0.0:9104", "bind address")
+	flag.BoolVar(&debuglog, "debug", false, "enable debug log")
 	flag.Uint64Var(&interval, "collect-interval-min", 5, "interval in minutes to perform Collect of Pods and Port Scan")
 
 	flag.Parse()
+
+	if debuglog {
+		log.SetLevel(log.DebugLevel)
+	}
 
 	// ========================
 	// HTTP handlers

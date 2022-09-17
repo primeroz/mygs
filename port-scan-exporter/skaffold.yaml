@@ -14,6 +14,8 @@ deploy:
       - name: local
         chartPath: ./charts/port-scan-exporter
         namespace: monitoring
+        setValues: 
+          debug: true
         artifactOverrides:
           imageKey: docker.io/primeroz/port-scan-exporter
           image: docker.io/primeroz/port-scan-exporter
