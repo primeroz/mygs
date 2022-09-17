@@ -5,16 +5,15 @@ import (
 	"fmt"
 	"time"
 
+	portscanner "github.com/anvie/port-scanner"
 	log "github.com/sirupsen/logrus"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	ctrl "sigs.k8s.io/controller-runtime"
-	//"github.com/anvie/port-scanner"
 )
 
+// Collect List of pods we want to scan and them to Memory Store
 func collectPods() {
-
-	start := time.Now()
 
 	log.Infof("Collecting Pods")
 
@@ -31,6 +30,7 @@ func collectPods() {
 
 	// Clear the DB before evaluating currently running pods
 	store.Del("/pods")
+	store.Del("/ports")
 
 	// Filter Pods to exclude those running with host network
 	for _, p := range pods.Items {
@@ -44,13 +44,10 @@ func collectPods() {
 		}
 	}
 
-	timeTrack(start, "Collecting Pods")
-
 }
 
-func scanPods(min uint64, max uint64) {
-
-	start := time.Now()
+// Scan Pods in Memory Store
+func scanPods(min int, max int) {
 
 	pods := store.ListDir("/pods")
 	log.Infof("Scanning %d Pods, min port:%d max port:%d", len(pods), min, max)
@@ -61,12 +58,19 @@ func scanPods(min uint64, max uint64) {
 	for _, p := range pods {
 		guard <- 1 // would block if guard channel is already filled
 		go func() {
-			_, name := store.Get(fmt.Sprintf("/pods/%s/name", p))
-			_, ip := store.Get(fmt.Sprintf("/pods/%s/ip", p))
-			log.Debugf("Scanning %d Pod with ip %s", name, ip)
+			name, _ := store.GetValue(fmt.Sprintf("/pods/%s/name", p))
+			ip, _ := store.GetValue(fmt.Sprintf("/pods/%s/ip", p))
+			log.Debugf("Scanning %s Pod with ip %s", name, ip)
+
+			// scan host with a 2 second timeout per port in 5 concurrent threads
+			ps := portscanner.NewPortScanner(ip, 2*time.Second, 5)
+			openedPorts := ps.GetOpenedPort(min, max)
+
+			for i := 0; i < len(openedPorts); i++ {
+				store.Set(fmt.Sprintf("/ports/%s/%d", name, openedPorts[i]), "true")
+			}
+
 			<-guard // removes an int from guard, allowing another to proceed
 		}()
 	}
-
-	timeTrack(start, "Scanning Pods")
 }
