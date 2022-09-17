@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"time"
 
 	"net/http"
@@ -21,6 +22,8 @@ var store memkv.Store
 // ========================
 // TODO Need lock to prevent multiple runs if it takes longer then interval ?
 func collectAndScan(min int, max int) {
+	firstStart := time.Now()
+
 	start := time.Now()
 	collectPods()
 	timeTrack(start, "Collecting Pods")
@@ -29,6 +32,9 @@ func collectAndScan(min int, max int) {
 	scanPods(min, max)
 	time.Sleep(5 * time.Second) // Ugly Hack to allow go subroutines to finish
 	timeTrack(start, "Scanning Pods")
+
+	store.Set("/timings/duration", fmt.Sprintf("%f", time.Since(firstStart).Seconds()))
+	store.Set("/timings/last", fmt.Sprintf("%d", time.Now().Unix()))
 
 	// // DEBUG Code to show content of Store
 	// for _, pod := range store.ListDir("/ports") {
@@ -76,6 +82,9 @@ func main() {
 	// HTTP handlers
 	// ========================
 	prometheus.Register(version.NewCollector("query_exporter"))
+
+	// Register the Port Scanner prometheus exporter
+	portScanRegister()
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(`
