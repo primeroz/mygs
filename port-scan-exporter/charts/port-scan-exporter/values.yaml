@@ -5,12 +5,13 @@
 replicaCount: 1
 
 image:
-  repository: nginx
+  repository: primeroz/port-scan-exporter
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
   tag: ""
 
 imageKey: primeroz/port-scan-exporter:latest
+imagePullPolicy: IfNotPresent
 
 imagePullSecrets: []
 nameOverride: ""

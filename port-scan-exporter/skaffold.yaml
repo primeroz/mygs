@@ -2,16 +2,18 @@ apiVersion: skaffold/v2beta29
 kind: Config
 build:
   local:
-    push: false
+    push: true
   artifacts:
-    - image: primeroz/port-scan-exporter
+    - image: docker.io/primeroz/port-scan-exporter
+      docker: {}
 deploy:
   helm:
     releases:
       - name: local
         chartPath: ./charts/port-scan-exporter
+        namespace: monitoring
         artifactOverrides:
-          imageKey: primeroz/port-scan-exporter
-          image: primeroz/port-scan-exporter
+          imageKey: docker.io/primeroz/port-scan-exporter
+          image: docker.io/primeroz/port-scan-exporter
         imageStrategy:
           fqn: {}
