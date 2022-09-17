@@ -14,8 +14,11 @@ import (
 // Note you can also include fields of other types if they provide utility
 // but we just won't be exposing them as metrics.
 type portScanCollector struct {
-	openPort     *prometheus.Desc
-	scanDuration *prometheus.Desc
+	openPort           *prometheus.Desc
+	scanDuration       *prometheus.Desc
+	lastSuccessfulScan *prometheus.Desc
+	scannedPodsTotal   *prometheus.Desc
+	openPodsTotal      *prometheus.Desc
 }
 
 // You must create a constructor for you collector that
@@ -28,6 +31,18 @@ func newPortScanCollector() *portScanCollector {
 		),
 		scanDuration: prometheus.NewDesc(prometheus.BuildFQName("port_scanner", "", "scan_duration_seconds"),
 			"Duration of the Collect and PortScan phases",
+			[]string{}, nil,
+		),
+		lastSuccessfulScan: prometheus.NewDesc(prometheus.BuildFQName("port_scanner", "", "last_successful_scan_epoch"),
+			"Epoch of last successful scan",
+			[]string{}, nil,
+		),
+		scannedPodsTotal: prometheus.NewDesc(prometheus.BuildFQName("port_scanner", "", "scanned_pods_total"),
+			"Total number of scanned pods in the last scan",
+			[]string{}, nil,
+		),
+		openPodsTotal: prometheus.NewDesc(prometheus.BuildFQName("port_scanner", "", "open_pods_total"),
+			"Total number of pods with open ports in the last scan",
 			[]string{}, nil,
 		),
 	}
@@ -68,7 +83,29 @@ func (collector *portScanCollector) Collect(ch chan<- prometheus.Metric) {
 		scanDurationSeconds = 0
 	}
 
+	// fetch last successful scan in epoch - this is a gauge since is an absolute value
+	lastSuccessfulScanEpochString, err := store.GetValue("/timings/last")
+	if err != nil {
+		log.Debugf("No last epoch in the store")
+		lastSuccessfulScanEpochString = "0"
+	}
+	lastSuccessfulScanEpoch, err := strconv.ParseFloat(lastSuccessfulScanEpochString, 64)
+	if err != nil {
+		log.Debugf("Failed to convert last epoch : %f", lastSuccessfulScanEpochString)
+		lastSuccessfulScanEpoch = 0
+	}
+
 	ch <- prometheus.MustNewConstMetric(collector.scanDuration, prometheus.GaugeValue, scanDurationSeconds)
+	ch <- prometheus.MustNewConstMetric(collector.lastSuccessfulScan, prometheus.GaugeValue, lastSuccessfulScanEpoch)
+
+	// Number of pods
+
+	numberOfScannedPods := store.ListDir("/pods")
+	numberOfOpenPods := store.ListDir("/ports")
+
+	ch <- prometheus.MustNewConstMetric(collector.scannedPodsTotal, prometheus.GaugeValue, float64(len(numberOfScannedPods)))
+	ch <- prometheus.MustNewConstMetric(collector.openPodsTotal, prometheus.GaugeValue, float64(len(numberOfOpenPods)))
+
 }
 
 func portScanRegister() {
