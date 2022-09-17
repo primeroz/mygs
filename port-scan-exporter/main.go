@@ -2,7 +2,6 @@ package main
 
 import (
 	"flag"
-	"time"
 
 	"net/http"
 
@@ -21,7 +20,8 @@ var store memkv.Store // Global KV Store
 // ========================
 // TODO Need lock to prevent multiple runs if it takes longer then interval ?
 func collectAndScan() {
-	log.Infof("Collecting Pods - %s", time.Now())
+	log.Infof("Collecting Pods")
+	collectPods()
 }
 
 func scheduleCollectAndScan(interval uint64) {
