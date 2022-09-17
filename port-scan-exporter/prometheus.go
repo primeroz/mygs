@@ -14,8 +14,9 @@ import (
 // Note you can also include fields of other types if they provide utility
 // but we just won't be exposing them as metrics.
 type portScanCollector struct {
-	openPort     *prometheus.Desc
-	scanDuration *prometheus.Desc
+	openPort           *prometheus.Desc
+	scanDuration       *prometheus.Desc
+	lastSuccessfulScan *prometheus.Desc
 }
 
 // You must create a constructor for you collector that
@@ -28,6 +29,10 @@ func newPortScanCollector() *portScanCollector {
 		),
 		scanDuration: prometheus.NewDesc(prometheus.BuildFQName("port_scanner", "", "scan_duration_seconds"),
 			"Duration of the Collect and PortScan phases",
+			[]string{}, nil,
+		),
+		lastSuccessfulScan: prometheus.NewDesc(prometheus.BuildFQName("port_scanner", "", "last_successful_scan_epoch"),
+			"Epoch of last successful scan",
 			[]string{}, nil,
 		),
 	}
@@ -68,7 +73,20 @@ func (collector *portScanCollector) Collect(ch chan<- prometheus.Metric) {
 		scanDurationSeconds = 0
 	}
 
+	// fetch last successful scan in epoch - this is a gauge since is an absolute value
+	lastSuccessfulScanEpochString, err := store.GetValue("/timings/last")
+	if err != nil {
+		log.Debugf("No last epoch in the store")
+		lastSuccessfulScanEpochString = "0"
+	}
+	lastSuccessfulScanEpoch, err := strconv.ParseFloat(lastSuccessfulScanEpochString, 64)
+	if err != nil {
+		log.Debugf("Failed to convert last epoch : %f", lastSuccessfulScanEpochString)
+		lastSuccessfulScanEpoch = 0
+	}
+
 	ch <- prometheus.MustNewConstMetric(collector.scanDuration, prometheus.GaugeValue, scanDurationSeconds)
+	ch <- prometheus.MustNewConstMetric(collector.lastSuccessfulScan, prometheus.GaugeValue, lastSuccessfulScanEpoch)
 }
 
 func portScanRegister() {
