@@ -85,3 +85,11 @@ nodeSelector: {}
 tolerations: []
 
 affinity: {}
+
+serviceMonitor:
+  enabled: true
+  selector:
+    prometheus: "kube-prometheus"
+  namespace: "monitoring"
+  interval: 30s
+  # honorLabels: true
