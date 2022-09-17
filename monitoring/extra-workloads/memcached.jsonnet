@@ -2,13 +2,14 @@ local kubecfg = import './kubecfg.libsonnet';
 local utils = import './utils.libsonnet';
 
 {
-  local chartData = import 'binary://upstream/minio-11.10.2.tgz',
+  local chartData = import 'binary://upstream/memcached-6.2.4.tgz',
 
   values:: {
-    networkPolicy+: {
-      enabled: true,
+    serviceAccount+: {
+      create: true,
     },
     metrics+: {
+      enabled: true,
       serviceMonitor+: {
         enabled: true,
         namespace: 'default',
@@ -16,10 +17,10 @@ local utils = import './utils.libsonnet';
     },
   },
 
-  minio:
+  memcached:
     utils.HelmToObjectsGVKName(
       kubecfg.parseHelmChart(
-        chartData, 'minio', 'default', $.values
+        chartData, 'memcached', 'default', $.values
       ),
     )
     {
@@ -28,8 +29,8 @@ local utils = import './utils.libsonnet';
         apiVersion: 'policy/v1beta1',
         kind: 'PodSecurityPolicy',
         metadata: {
-          labels: $.minio['apps/v1'].Deployment.minio.metadata.labels,
-          name: 'minio',
+          labels: $.memcached['apps/v1'].Deployment.memcached.metadata.labels,
+          name: 'memcached',
         },
         spec: {
           allowPrivilegeEscalation: false,
@@ -63,7 +64,6 @@ local utils = import './utils.libsonnet';
             'projected',
             'secret',
             'downwardAPI',
-            'persistentVolumeClaim',
           ],
         },
       },
@@ -72,8 +72,8 @@ local utils = import './utils.libsonnet';
         apiVersion: 'rbac.authorization.k8s.io/v1',
         kind: 'ClusterRole',
         metadata: {
-          name: 'minio-psp',
-          labels: $.minio['apps/v1'].Deployment.minio.metadata.labels,
+          name: 'memcached-psp',
+          labels: $.memcached['apps/v1'].Deployment.memcached.metadata.labels,
         },
         rules: [
           {
@@ -81,7 +81,7 @@ local utils = import './utils.libsonnet';
               'extensions',
             ],
             resourceNames: [
-              'minio',
+              'memcached',
             ],
             resources: [
               'podsecuritypolicies',
@@ -96,19 +96,19 @@ local utils = import './utils.libsonnet';
         apiVersion: 'rbac.authorization.k8s.io/v1',
         kind: 'RoleBinding',
         metadata: {
-          labels: $.minio['apps/v1'].Deployment.minio.metadata.labels,
-          name: 'minio-psp-use',
+          labels: $.memcached['apps/v1'].Deployment.memcached.metadata.labels,
+          name: 'memcached-psp-use',
           namespace: 'default',
         },
         roleRef: {
           apiGroup: 'rbac.authorization.k8s.io',
           kind: 'ClusterRole',
-          name: 'minio-psp',
+          name: 'memcached-psp',
         },
         subjects: [
           {
             kind: 'ServiceAccount',
-            name: 'minio',
+            name: 'memcached',
             namespace: 'default',
           },
         ],
