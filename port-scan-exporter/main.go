@@ -13,7 +13,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-var store memkv.Store // Global KV Store
+var store memkv.Store
 
 // ========================
 // Collect Pods and Scan
@@ -30,6 +30,10 @@ func scheduleCollectAndScan(interval uint64) {
 }
 
 func main() {
+
+	// Create Store
+	store = memkv.New()
+
 	// =====================
 	// Get OS parameter
 	// =====================
