@@ -19,13 +19,13 @@ var store memkv.Store
 // Collect Pods and Scan
 // ========================
 // TODO Need lock to prevent multiple runs if it takes longer then interval ?
-func collectAndScan() {
+func collectAndScan(min uint64, max uint64) {
 	collectPods()
-	scanPods()
+	scanPods(min, max)
 }
 
-func scheduleCollectAndScan(interval uint64) {
-	gocron.Every(interval).Minute().Do(collectAndScan)
+func scheduleCollectAndScan(interval uint64, min uint64, max uint64) {
+	gocron.Every(interval).Minute().Do(collectAndScan, min, max)
 	<-gocron.Start()
 }
 
@@ -39,11 +39,15 @@ func main() {
 	// =====================
 	var bind string
 	var interval uint64
+	var portMin uint64
+	var portMax uint64
 	var debuglog bool
 
 	flag.StringVar(&bind, "bind", "0.0.0.0:9104", "bind address")
 	flag.BoolVar(&debuglog, "debug", false, "enable debug log")
 	flag.Uint64Var(&interval, "collect-interval-min", 5, "interval in minutes to perform Collect of Pods and Port Scan")
+	flag.Uint64Var(&portMin, "port-min", 1, "Min port to scan for")
+	flag.Uint64Var(&portMax, "port-max", 10000, "Max port to scan for")
 
 	flag.Parse()
 
@@ -84,8 +88,8 @@ func main() {
 	// ========================
 	// start scheduler
 	// ========================
-	go collectAndScan() // First Scan at startup
-	go scheduleCollectAndScan(interval)
+	go collectAndScan(portMin, portMax) // First Scan at startup
+	go scheduleCollectAndScan(interval, portMin, portMax)
 
 	// ========================
 	// start server

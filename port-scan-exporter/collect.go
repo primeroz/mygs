@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"time"
 
-	//			v1 "k8s.io/api/apps/v1"
 	log "github.com/sirupsen/logrus"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	ctrl "sigs.k8s.io/controller-runtime"
+	//"github.com/anvie/port-scanner"
 )
 
 func collectPods() {
@@ -48,12 +48,25 @@ func collectPods() {
 
 }
 
-func scanPods() {
+func scanPods(min uint64, max uint64) {
 
 	start := time.Now()
 
-	pods := store.List("/pods")
-	log.Infof("Scanning %s Pods", len(pods))
+	pods := store.ListDir("/pods")
+	log.Infof("Scanning %d Pods, min port:%d max port:%d", len(pods), min, max)
+
+	// https://stackoverflow.com/questions/25306073/always-have-x-number-of-goroutines-running-at-any-time
+	maxScanners := 10
+	guard := make(chan int, maxScanners)
+	for _, p := range pods {
+		guard <- 1 // would block if guard channel is already filled
+		go func() {
+			_, name := store.Get(fmt.Sprintf("/pods/%s/name", p))
+			_, ip := store.Get(fmt.Sprintf("/pods/%s/ip", p))
+			log.Debugf("Scanning %d Pod with ip %s", name, ip)
+			<-guard // removes an int from guard, allowing another to proceed
+		}()
+	}
 
 	timeTrack(start, "Scanning Pods")
 }
