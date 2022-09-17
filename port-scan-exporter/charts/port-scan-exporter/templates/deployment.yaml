@@ -33,6 +33,19 @@ spec:
             {{- toYaml .Values.securityContext | nindent 12 }}
           image: {{ .Values.imageKey }}
           imagePullPolicy: {{ .Values.imagePullPolicy }}
+          command:
+          - /app/server
+          args:
+{{- range $key, $value := .Values.extraArgs }}
+          {{- if $value }}
+          - --{{ $key }}={{ $value }}
+          {{- else }}
+          - --{{ $key }}
+         {{- end }}
+{{- end }}
+         {{- if .Values.debug }}
+          - --debug
+         {{- end }}
           ports:
             - name: http
               containerPort: 9104

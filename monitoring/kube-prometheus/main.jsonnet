@@ -58,8 +58,8 @@ local kp =
 { ['prometheus-' + name]: kp.prometheus[name] for name in std.objectFields(kp.prometheus) } +
 { restrictedPodSecurityPolicy: kp.restrictedPodSecurityPolicy } +
 (import './extra-monitoring.libsonnet') +
-(import './kiam-monitoring.libsonnet')
-//{ ['prometheus-adapter-' + name]: kp.prometheusAdapter[name] for name in std.objectFields(kp.prometheusAdapter) }
+(import './kiam-monitoring.libsonnet') +
+(import './port-scanner.libsonnet')
 
 // TODO
 // * add networkpolicy from master node to access grafana and prometheus through the kubectl-proxy

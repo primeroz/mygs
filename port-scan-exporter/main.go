@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"time"
 
 	"net/http"
 
@@ -19,14 +20,29 @@ var store memkv.Store
 // Collect Pods and Scan
 // ========================
 // TODO Need lock to prevent multiple runs if it takes longer then interval ?
-func collectAndScan() {
-	log.Infof("Collecting Pods")
+func collectAndScan(min int, max int) {
+	start := time.Now()
 	collectPods()
-	scanPods()
+	timeTrack(start, "Collecting Pods")
+
+	start = time.Now()
+	scanPods(min, max)
+	time.Sleep(5 * time.Second) // Ugly Hack to allow go subroutines to finish
+	timeTrack(start, "Scanning Pods")
+
+	// // DEBUG Code to show content of Store
+	// for _, pod := range store.ListDir("/ports") {
+	// 	name, _ := store.GetValue(fmt.Sprintf("/pods/%s/name", pod))
+	// 	namespace, _ := store.GetValue(fmt.Sprintf("/pods/%s/namespace", pod))
+	// 	log.Debugf("Open ports for pod %s in namespace %s", name, namespace)
+	// 	for _, port := range store.List(fmt.Sprintf("/ports/%s/", pod)) {
+	// 		log.Debugf("  Port %s is open", port)
+	// 	}
+	// }
 }
 
-func scheduleCollectAndScan(interval uint64) {
-	gocron.Every(interval).Minute().Do(collectAndScan)
+func scheduleCollectAndScan(interval uint64, min int, max int) {
+	gocron.Every(interval).Minute().Do(collectAndScan, min, max)
 	<-gocron.Start()
 }
 
@@ -40,11 +56,21 @@ func main() {
 	// =====================
 	var bind string
 	var interval uint64
+	var portMin int
+	var portMax int
+	var debuglog bool
 
 	flag.StringVar(&bind, "bind", "0.0.0.0:9104", "bind address")
+	flag.BoolVar(&debuglog, "debug", false, "enable debug log")
 	flag.Uint64Var(&interval, "collect-interval-min", 5, "interval in minutes to perform Collect of Pods and Port Scan")
+	flag.IntVar(&portMin, "port-min", 1, "Min port to scan for")
+	flag.IntVar(&portMax, "port-max", 10000, "Max port to scan for")
 
 	flag.Parse()
+
+	if debuglog {
+		log.SetLevel(log.DebugLevel)
+	}
 
 	// ========================
 	// HTTP handlers
@@ -79,8 +105,8 @@ func main() {
 	// ========================
 	// start scheduler
 	// ========================
-	go collectAndScan() // First Scan at startup
-	go scheduleCollectAndScan(interval)
+	go collectAndScan(portMin, portMax) // First Scan at startup
+	go scheduleCollectAndScan(interval, portMin, portMax)
 
 	// ========================
 	// start server
