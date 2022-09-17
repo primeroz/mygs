@@ -2,26 +2,47 @@ package main
 
 import (
 	"flag"
+	"time"
 
 	"net/http"
 
+	"github.com/jasonlvhit/gocron"
+	"github.com/kelseyhightower/memkv"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/prometheus/common/version"
 	log "github.com/sirupsen/logrus"
 )
 
+var store memkv.Store // Global KV Store
+
+// ========================
+// Collect Pods and Scan
+// ========================
+// TODO Need lock to prevent multiple runs if it takes longer then interval ?
+func collectAndScan() {
+	log.Infof("Collecting Pods - %s", time.Now())
+}
+
+func scheduleCollectAndScan(interval uint64) {
+	gocron.Every(interval).Minute().Do(collectAndScan)
+	<-gocron.Start()
+}
+
 func main() {
 	// =====================
 	// Get OS parameter
 	// =====================
 	var bind string
-	flag.StringVar(&bind, "bind", "0.0.0.0:9104", "bind")
+	var interval uint64
+
+	flag.StringVar(&bind, "bind", "0.0.0.0:9104", "bind address")
+	flag.Uint64Var(&interval, "collect-interval-min", 5, "interval in minutes to perform Collect of Pods and Port Scan")
 
 	flag.Parse()
 
 	// ========================
-	// Regist handler
+	// HTTP handlers
 	// ========================
 	prometheus.Register(version.NewCollector("query_exporter"))
 
@@ -50,7 +71,15 @@ func main() {
 		_, _ = w.Write([]byte("ok"))
 	})
 
+	// ========================
+	// start scheduler
+	// ========================
+	go collectAndScan() // First Scan at startup
+	go scheduleCollectAndScan(interval)
+
+	// ========================
 	// start server
+	// ========================
 	log.Infof("Starting http server - %s", bind)
 	if err := http.ListenAndServe(bind, nil); err != nil {
 		log.Errorf("Failed to start http server: %s", err)

@@ -3,6 +3,8 @@ kind: Config
 build:
   local:
     push: true
+    useDockerCLI: true
+    useBuildkit: true
   artifacts:
     - image: docker.io/primeroz/port-scan-exporter
       docker: {}
