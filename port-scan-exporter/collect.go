@@ -27,6 +27,9 @@ func collectPods() {
 
 	log.Infof("There are %d pods in the cluster", len(pods.Items))
 
+	// Clear the DB before evaluating currently running pods
+	store.Del("/pods")
+
 	// Filter Pods to exclude those running with host network
 	for _, p := range pods.Items {
 		if p.Spec.HostNetwork {
@@ -40,14 +43,14 @@ func collectPods() {
 	}
 
 	// TMP Check
-	keys := store.List("/pods/")
-	log.Infof("There are %d keys in the store", len(keys))
-	for _, key := range keys {
-		log.Infof("Key: %s", key)
-	}
-	store.Del("/pods")
-	testkeys := store.List("/")
-	log.Infof("There are %d keys in the store", len(testkeys))
+	//keys := store.List("/pods/")
+	//log.Infof("There are %d keys in the store", len(keys))
+	//for _, key := range keys {
+	//	log.Infof("Key: %s", key)
+	//}
+	//store.Del("/pods")
+	//testkeys := store.List("/")
+	//log.Infof("There are %d keys in the store", len(testkeys))
 
 	timeTrack(start, "Collecting Pods")
 
@@ -57,11 +60,8 @@ func scanPods() {
 
 	start := time.Now()
 
-	pods, err := store.GetAll("/*")
-	if err != nil {
-		panic(err.Error())
-	}
+	pods := store.List("/pods")
 	log.Infof("Scanning %s Pods", len(pods))
 
-	timeTrack(start, "Collecting Pods")
+	timeTrack(start, "Scanning Pods")
 }

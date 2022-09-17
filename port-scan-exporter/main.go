@@ -22,6 +22,7 @@ var store memkv.Store
 func collectAndScan() {
 	log.Infof("Collecting Pods")
 	collectPods()
+	scanPods()
 }
 
 func scheduleCollectAndScan(interval uint64) {
