@@ -114,6 +114,38 @@ local utils = import './utils.libsonnet';
         ],
       },
 
+      networkPolicy: {
+        apiVersion: 'networking.k8s.io/v1',
+        kind: 'NetworkPolicy',
+        metadata: {
+          labels: $.memcached['apps/v1'].Deployment.memcached.metadata.labels,
+          name: 'memcached',
+          namespace: 'default',
+        },
+        spec: {
+          ingress: [
+            {
+              ports: [
+                {
+                  port: 9150,
+                  protocol: 'TCP',
+                },
+                {
+                  port: 11211,
+                  protocol: 'TCP',
+                },
+              ],
+            },
+          ],
+          podSelector: {
+            matchLabels: $.memcached['apps/v1'].Deployment.memcached.spec.selector.matchLabels,
+          },
+          policyTypes: [
+            'Ingress',
+          ],
+        },
+      },
+
     },
 
 }
