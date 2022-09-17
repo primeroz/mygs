@@ -102,36 +102,6 @@ local utils = import './utils.libsonnet';
         ],
       },
 
-
-      //v1+: {
-      //  Service+: {
-      //    'sealed-secrets'+: {
-      //      spec+: {
-      //        ports: [
-      //          {
-      //            name: 'http',
-      //            port: 8080,
-      //            protocol: 'TCP',
-      //            targetPort: 'http',
-      //          },
-      //        ],
-      //      },
-      //    },
-      //  },
-      //},
-      //'monitoring.coreos.com/v1'+: {
-      //  ServiceMonitor+: {
-      //    'sealed-secrets'+: {
-      //      spec+: {
-      //        endpoints: [
-      //          {
-      //            port: 'http',
-      //          },
-      //        ],
-      //      },
-      //    },
-      //  },
-      //},
     },
 
 }
