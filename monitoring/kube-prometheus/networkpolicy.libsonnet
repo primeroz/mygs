@@ -23,4 +23,21 @@ local peer = k.networking.v1.networkPolicyPeer;
 
     for namespace in ['default', 'kube-system', 'monitoring']
   ],
+
+  helloworld_np:
+    np.new('helloworld') +
+    np.metadata.withNamespace('default') +
+    np.spec.withPolicyTypes('Ingress') +
+    np.spec.withIngress(
+      rule.withFrom(
+        peer.namespaceSelector.withMatchLabels({ 'kubernetes.io/metadata.name': 'kube-system' }) +
+        peer.podSelector.withMatchLabels({ 'app.kubernetes.io/name': 'nginx-ingress-controller' })
+      ),
+    ) + {
+      spec+: {
+        podSelector: {
+          matchLabels: { app: 'helloworld' },
+        },
+      },
+    },
 }

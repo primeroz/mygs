@@ -60,7 +60,7 @@ local kp =
 { restrictedPodSecurityPolicy: kp.restrictedPodSecurityPolicy } +
 (import './extra-monitoring.libsonnet') +
 (import './kiam-monitoring.libsonnet') +
-(import './port-scanner.libsonnet')
+(import './networkpolicy.libsonnet')
 
 // TODO
 // * add networkpolicy from master node to access grafana and prometheus through the kubectl-proxy
