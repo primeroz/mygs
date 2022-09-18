@@ -125,13 +125,19 @@ local utils = import './utils.libsonnet';
         spec: {
           ingress: [
             {
+              from: [
+                {
+                  podSelector: {
+                    matchLabels: {
+                      'app.kubernetes.io/component': 'prometheus',
+                      'app.kubernetes.io/instance': 'k8s',
+                    },
+                  },
+                },
+              ],
               ports: [
                 {
                   port: 9150,
-                  protocol: 'TCP',
-                },
-                {
-                  port: 11211,
                   protocol: 'TCP',
                 },
               ],

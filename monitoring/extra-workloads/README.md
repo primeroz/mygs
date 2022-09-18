@@ -7,13 +7,13 @@
 ### Usage
 
 #### minio
-* show manifests `kubecfg -J vendor/ show minio.jsonnet`
-* apply manifests `kubecfg -J vendor/ update minio.jsonnet`
+* show manifests `kubecfg --alpha show minio.jsonnet`
+* apply manifests `kubecfg --alpha update minio.jsonnet`
 
 #### sealed-secrets
-* show manifests `kubecfg -J vendor/ show sealed-secrets.jsonnet`
-* apply manifests `kubecfg -J vendor/ update sealed-secrets.jsonnet`
+* show manifests `kubecfg --alpha show sealed-secrets.jsonnet`
+* apply manifests `kubecfg --alpha update sealed-secrets.jsonnet`
 
 #### memcached
-* show manifests `kubecfg -J vendor/ show memcached.jsonnet`
-* apply manifests `kubecfg -J vendor/ update memcached.jsonnet`
+* show manifests `kubecfg --alpha show memcached.jsonnet`
+* apply manifests `kubecfg --alpha update memcached.jsonnet`
