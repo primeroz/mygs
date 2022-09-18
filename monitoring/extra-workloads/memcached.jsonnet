@@ -113,7 +113,6 @@ local utils = import './utils.libsonnet';
           },
         ],
       },
-
       networkPolicy: {
         apiVersion: 'networking.k8s.io/v1',
         kind: 'NetworkPolicy',
@@ -124,6 +123,14 @@ local utils = import './utils.libsonnet';
         },
         spec: {
           ingress: [
+            {
+              ports: [
+                {
+                  port: 11211,
+                  protocol: 'TCP',
+                },
+              ],
+            },
             {
               from: [
                 {
